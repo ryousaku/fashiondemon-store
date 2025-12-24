@@ -20,7 +20,25 @@ func main() {
 	product.RegisterRoutes(mux)
 	order.RegisterRoutes(mux)
 
-	http.ListenAndServe(":8080", mux)
+	// CORS Middleware
+	corsMux := enableCORS(mux)
+
+	http.ListenAndServe(":8080", corsMux)
+}
+
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func runMigrations() {
